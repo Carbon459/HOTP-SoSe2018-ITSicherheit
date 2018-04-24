@@ -1,6 +1,6 @@
 #include <Arduino.h>
-#include "src/arduino-cc1101-master/cc1101.h"
-#include "src/arduino-cc1101-master/ccpacket.h"
+#include <cc1101.h>
+#include <ccpacket.h>
 
 // Attach CC1101 pins to their corresponding SPI pins
 // Uno pins:
