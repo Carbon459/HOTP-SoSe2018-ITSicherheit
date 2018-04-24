@@ -1,3 +1,5 @@
+#include "lib\arduino-cc1101\cc1101.h"
+
 void setup() {
   // put your setup code here, to run once.
   Serial.begin(9600);
