@@ -35,7 +35,6 @@ void messageReceived() {
 }
 
 void setup() {
-<<<<<<< HEAD
     radio.init();
     radio.setSyncWord(syncWord);
     radio.setCarrierFreq(CFREQ_433);
