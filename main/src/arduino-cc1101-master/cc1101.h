@@ -52,7 +52,7 @@ enum RFSTATE
   RFSTATE_TX
 };
 
-#define CC1101_GDO0 2   // GDO0 input interrupt pin
+#define CC1101_GDO0 3   // GDO0 input interrupt pin
 
 /**
  * Working modes

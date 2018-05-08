@@ -18,8 +18,8 @@
 #define CC1101Interrupt 9 // Pin 9
 #define CC1101_GDO0 9
 #else
-#define CC1101Interrupt 0 // Pin 2
-#define CC1101_GDO0 2
+#define CC1101Interrupt 1 // Pin 2
+#define CC1101_GDO0 3
 #endif
 
 CC1101 radio;
