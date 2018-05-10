@@ -30,9 +30,9 @@ void setup() {
       | (hash[offset+1] & 0xff) << 16
       | (hash[offset+2] & 0xff) <<  8
       | (hash[offset+3] & 0xff);*/
-  int offset   =  hashedhmac[19] & 0xf;
+  uint8_t offset   =  hashedhmac[19] & 0xf;
 
-  long otp = 0;
+  uint32_t otp = 0;
   for(int i = 0; i < 4; i++) { //Byte 10 bis 13 zusammensetzen
     otp = (otp << 8) | hashedhmac[offset + i];
   }
