@@ -4,6 +4,7 @@
 
 void printHash(uint8_t* hash) {
   int i;
+  Serial.print("SHA1-HMAC: ");
   for (i=0; i<20; i++) {
     Serial.print("0123456789abcdef"[hash[i]>>4]);
     Serial.print("0123456789abcdef"[hash[i]&0xf]);
@@ -11,10 +12,7 @@ void printHash(uint8_t* hash) {
   Serial.println();
 }
 
-uint32_t gCounter = 0; //Eigentlich 8byte
-uint8_t hmacKey[]= {0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30};
-
-uint8_t hashedhmac[]= {0x1f, 0x86, 0x98, 0x69, 0x0e, 0x02, 0xca, 0x16, 0x61, 0x85, 0x50, 0xef, 0x7f, 0x19, 0xda, 0x8e, 0x94, 0x5b, 0x55, 0x5a}; //OTP: 872921
+uint64_t gCounter = 0;
 
 /**
  * Erstellt ein 6 bis 8-stelligen Code nach dem HOTP Verfahren(RFC4226).
@@ -28,35 +26,40 @@ uint8_t hashedhmac[]= {0x1f, 0x86, 0x98, 0x69, 0x0e, 0x02, 0xca, 0x16, 0x61, 0x8
 uint32_t hotp(uint32_t counter, uint8_t* secret, size_t secretSize, uint8_t digits) {
   
   uint64_t divider;
-  if(digits == 6) {divider = 1000000;}          //10^6
-  else if(digits == 7) {divider = 10000000;}    //10^7
-  else if(digits == 8) { divider = 100000000;}  //10^8
+  if(digits == 6) {divider = 1000000;}         //10^6
+  else if(digits == 7) {divider = 10000000;}   //10^7
+  else if(digits == 8) {divider = 100000000;}  //10^8
   else {return 0;}
 
   //SHA1 HMAC Hash
   uint8_t *hash;
   Sha1.initHmac(secret,secretSize); // key, and length of key in bytes
-  Sha1.print(counter);
+
+  for(int i=7; i>=0; i--)
+  {
+    Sha1.write(gCounter >> (i * 8));
+  }
+  
   hash = Sha1.resultHmac();
   
   #ifdef DEBUG
-  printHash(hash); //cc93cf18508d94934c64b65d8ba7667fb7cde4b0 gewünschte ergebnis
+  printHash(hash);
   #endif
   
-  uint8_t offset   =  hashedhmac[19] & 0xf;
+  uint8_t offset   =  hash[19] & 0xf;
 
   uint32_t otp = 0;
   for(int i = 0; i < 4; i++) { //Byte Offset bis Offset+3 zusammensetzen
-    otp = (otp << 8) | hashedhmac[offset + i];
+    otp = (otp << 8) | hash[offset + i];
   }
-  otp = otp & 0x7FFFFFFF; //Erste Byte maskieren, aufgrund unsigned vs signed modulo berechnung auf verschiedenen prozessoren.
+  otp = otp & 0x7FFFFFFF; //Vorzeichen Byte maskieren, aufgrund unsigned vs signed modulo berechnung auf verschiedenen prozessoren.
   otp = otp % divider;
   return otp;
 }
 
 void setup() {
   Serial.begin(9600);
-  uint32_t otp = hotp(gCounter, hmacKey, 20, 6);
+  uint32_t otp = hotp(gCounter, "12345678901234567890", 20, 6);
   Serial.println(otp);
 }
 
@@ -64,6 +67,8 @@ void loop() {
 
 }
 /*
+  uint8_t hashedhmac[]= {0x1f, 0x86, 0x98, 0x69, 0x0e, 0x02, 0xca, 0x16, 0x61, 0x85, 0x50, 0xef, 0x7f, 0x19, 0xda, 0x8e, 0x94, 0x5b, 0x55, 0x5a}; //OTP: 872921
+  
    The following test data uses the ASCII string
    "12345678901234567890" for the secret:
 

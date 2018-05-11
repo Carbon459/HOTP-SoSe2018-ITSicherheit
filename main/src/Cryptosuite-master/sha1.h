@@ -24,7 +24,7 @@ class Sha1Class : public Print
     uint8_t* result(void);
     uint8_t* resultHmac(void);
     virtual size_t write(uint8_t);
-	virtual void Sha1Class::writebytes(const uint8_t* data, int length);
+	void Sha1Class::writebytes(const uint8_t* data, int length);
     using Print::write;
   private:
     void pad();

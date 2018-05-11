@@ -76,7 +76,7 @@ size_t Sha1Class::write(uint8_t data) {
   ++byteCount;
   addUncounted(data);
 }
-//Hinzugefuegt
+
 void Sha1Class::writebytes(const uint8_t* data, int length) {
  for (int i=0; i<length; i++)
  {
