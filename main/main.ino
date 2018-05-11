@@ -1,5 +1,7 @@
 #include "src/Cryptosuite-master/sha1.h"
 
+#define DEBUG
+
 void printHash(uint8_t* hash) {
   int i;
   for (i=0; i<20; i++) {
@@ -9,36 +11,52 @@ void printHash(uint8_t* hash) {
   Serial.println();
 }
 
-uint8_t counter = 0;
+uint32_t gCounter = 0; //Eigentlich 8byte
 uint8_t hmacKey[]= {0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30};
 
-uint8_t hashedhmac[]= {0x1f, 0x86, 0x98, 0x69, 0x0e, 0x02, 0xca, 0x16, 0x61, 0x85, 0x50, 0xef, 0x7f, 0x19, 0xda, 0x8e, 0x94, 0x5b, 0x55, 0x5a};
+uint8_t hashedhmac[]= {0x1f, 0x86, 0x98, 0x69, 0x0e, 0x02, 0xca, 0x16, 0x61, 0x85, 0x50, 0xef, 0x7f, 0x19, 0xda, 0x8e, 0x94, 0x5b, 0x55, 0x5a}; //OTP: 872921
 
-void setup() {
-  Serial.begin(9600);
+/**
+ * Erstellt ein 6 bis 8-stelligen Code nach dem HOTP Verfahren(RFC4226).
+ * @counter Der Zählstand, der synchron gehalten werden muss mit der gegenstelle
+ * @secret Ein gemeinsamer geheimer Schlüssel
+ * @secretSize Länge dieses Schlüssels
+ * @digits Gültige Werte: 6,7,8. Gibt die Anzahl der Stellen des ausgegeben OTPs an.
+ * 
+ * @returns 6-8 stelliges Einmalpasswort. Bei ungültiger Anzahl an stellen wird 0 zurückgegeben.
+ */
+uint32_t hotp(uint32_t counter, uint8_t* secret, size_t secretSize, uint8_t digits) {
+  
+  uint64_t divider;
+  if(digits == 6) {divider = 1000000;}          //10^6
+  else if(digits == 7) {divider = 10000000;}    //10^7
+  else if(digits == 8) { divider = 100000000;}  //10^8
+  else {return 0;}
+
   //SHA1 HMAC Hash
   uint8_t *hash;
-  Sha1.initHmac(hmacKey,20); // key, and length of key in bytes
-  
+  Sha1.initHmac(secret,secretSize); // key, and length of key in bytes
   Sha1.print(counter);
   hash = Sha1.resultHmac();
-  printHash(hash); //cc93cf18508d94934c64b65d8ba7667fb7cde4b0 gewünschte ergebnis
-
-  /*int offset   =  hash[19] & 0xf ;
   
-  int bin_code = (hash[offset]  & 0x7f) << 24
-      | (hash[offset+1] & 0xff) << 16
-      | (hash[offset+2] & 0xff) <<  8
-      | (hash[offset+3] & 0xff);*/
+  #ifdef DEBUG
+  printHash(hash); //cc93cf18508d94934c64b65d8ba7667fb7cde4b0 gewünschte ergebnis
+  #endif
+  
   uint8_t offset   =  hashedhmac[19] & 0xf;
 
   uint32_t otp = 0;
-  for(int i = 0; i < 4; i++) { //Byte 10 bis 13 zusammensetzen
+  for(int i = 0; i < 4; i++) { //Byte Offset bis Offset+3 zusammensetzen
     otp = (otp << 8) | hashedhmac[offset + i];
   }
-  otp = otp & 0x7FFFFFFF; //Erste Byte maskieren
-  otp = otp % 1000000; //10^6 für 6 Stellen HOTP wert
-   
+  otp = otp & 0x7FFFFFFF; //Erste Byte maskieren, aufgrund unsigned vs signed modulo berechnung auf verschiedenen prozessoren.
+  otp = otp % divider;
+  return otp;
+}
+
+void setup() {
+  Serial.begin(9600);
+  uint32_t otp = hotp(gCounter, hmacKey, 20, 6);
   Serial.println(otp);
 }
 
