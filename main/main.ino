@@ -18,12 +18,12 @@ uint64_t gCounter = 0;
  * Erstellt ein 6 bis 8-stelligen Code nach dem HOTP Verfahren(RFC4226).
  * @counter Der Zählstand, der synchron gehalten werden muss mit der gegenstelle
  * @secret Ein gemeinsamer geheimer Schlüssel
- * @secretSize Länge dieses Schlüssels
+ * @secretSize Länge dieses Schlüssels in bytes
  * @digits Gültige Werte: 6,7,8. Gibt die Anzahl der Stellen des ausgegeben OTPs an.
  * 
  * @returns 6-8 stelliges Einmalpasswort. Bei ungültiger Anzahl an stellen wird 0 zurückgegeben.
  */
-uint32_t hotp(uint32_t counter, uint8_t* secret, size_t secretSize, uint8_t digits) {
+uint32_t hotp(uint32_t counter, char* secret, size_t secretSize, uint8_t digits) {
   
   uint64_t divider;
   if(digits == 6) {divider = 1000000;}         //10^6
@@ -54,13 +54,22 @@ uint32_t hotp(uint32_t counter, uint8_t* secret, size_t secretSize, uint8_t digi
   }
   otp = otp & 0x7FFFFFFF; //Vorzeichen Byte maskieren, aufgrund unsigned vs signed modulo berechnung auf verschiedenen prozessoren.
   otp = otp % divider;
+
+  #ifdef DEBUG
+  Serial.print((String)"OTP: " + otp + "      C: " + counter + "      K: ");
+  for(int i = 0; i < secretSize; i++) {
+    Serial.print((char)secret[i]);
+  }
+  Serial.println();
+  #endif
+  
   return otp;
 }
 
 void setup() {
   Serial.begin(9600);
   uint32_t otp = hotp(gCounter, "12345678901234567890", 20, 6);
-  Serial.println(otp);
+ 
 }
 
 void loop() {
