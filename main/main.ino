@@ -1,80 +1,12 @@
-#include "src/Cryptosuite-master/sha1.h"
-
-#define DEBUG
-
-void printHash(uint8_t* hash) {
-  int i;
-  Serial.print("SHA1-HMAC: ");
-  for (i=0; i<20; i++) {
-    Serial.print("0123456789abcdef"[hash[i]>>4]);
-    Serial.print("0123456789abcdef"[hash[i]&0xf]);
-  }
-  Serial.println();
-}
-
-uint64_t gCounter = 0;
-
-/**
- * Erstellt ein 6 bis 8-stelligen Code nach dem HOTP Verfahren(RFC4226).
- * @counter Der Zählstand, der synchron gehalten werden muss mit der gegenstelle
- * @secret Ein gemeinsamer geheimer Schlüssel
- * @secretSize Länge dieses Schlüssels in bytes
- * @digits Gültige Werte: 6,7,8. Gibt die Anzahl der Stellen des ausgegeben OTPs an.
- * 
- * @returns 6-8 stelliges Einmalpasswort. Bei ungültiger Anzahl an stellen wird 0 zurückgegeben.
- */
-uint32_t hotp(uint32_t counter, char* secret, size_t secretSize, uint8_t digits) {
-  
-  uint64_t divider;
-  if(digits == 6) {divider = 1000000;}         //10^6
-  else if(digits == 7) {divider = 10000000;}   //10^7
-  else if(digits == 8) {divider = 100000000;}  //10^8
-  else {return 0;}
-
-  //SHA1 HMAC Hash
-  uint8_t *hash;
-  Sha1.initHmac(secret,secretSize); // key, and length of key in bytes
-
-  for(int i=7; i>=0; i--)
-  {
-    Sha1.write(gCounter >> (i * 8));
-  }
-  
-  hash = Sha1.resultHmac();
-  
-  #ifdef DEBUG
-  printHash(hash);
-  #endif
-  
-  uint8_t offset   =  hash[19] & 0xf;
-
-  uint32_t otp = 0;
-  for(int i = 0; i < 4; i++) { //Byte Offset bis Offset+3 zusammensetzen
-    otp = (otp << 8) | hash[offset + i];
-  }
-  otp = otp & 0x7FFFFFFF; //Vorzeichen Byte maskieren, aufgrund unsigned vs signed modulo berechnung auf verschiedenen prozessoren.
-  otp = otp % divider;
-
-  #ifdef DEBUG
-  Serial.print((String)"OTP: " + otp + "      C: " + counter + "      K: ");
-  for(int i = 0; i < secretSize; i++) {
-    Serial.print((char)secret[i]);
-  }
-  Serial.println();
-  #endif
-  
-  return otp;
-}
+#include "src/AuthHOTP/AuthHOTP.h"
 
 void setup() {
   Serial.begin(9600);
-  uint32_t otp = hotp(gCounter, "12345678901234567890", 20, 6);
- 
+  AuthHOTP hotp("12345678901234567890", 20);
+  uint32_t otp = hotp.calcOTP(6);
 }
 
-void loop() {
-
-}
+void loop() {}
 /*
   uint8_t hashedhmac[]= {0x1f, 0x86, 0x98, 0x69, 0x0e, 0x02, 0xca, 0x16, 0x61, 0x85, 0x50, 0xef, 0x7f, 0x19, 0xda, 0x8e, 0x94, 0x5b, 0x55, 0x5a}; //OTP: 872921
   
