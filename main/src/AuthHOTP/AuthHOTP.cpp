@@ -17,6 +17,48 @@ void AuthHOTP::printHash(uint8_t* hash) {
   Serial.println();
 }
 
+char* AuthHOTP::authServer(char* msg) {
+	char* backmsg;
+	switch(msg) {
+		case "check":
+			//TODO cooldown(throttle)
+			char buffer[11];
+			itoa(otp, buffer, 10);
+			uint8_t digits = strlen(buffer);
+			if(digits > 5 && digits < 9) {
+				if(otp == calcOTP(digits)) {
+				#ifdef DEBUG
+				Serial.println("Auth: C: " + String((uint32_t)_counter) + " Success");
+				#endif
+				_counter++;
+				} else {
+					//TODO Resync
+				}
+			}
+			#ifdef DEBUG
+			Serial.println("Auth: C: " + String((uint32_t)_counter) + " Failure");
+			#endif
+			break;
+		default:
+			break;
+	}
+	return backmsg;
+}
+
+char* AuthHOTP::authClient(char* msg) {
+	char* backmsg;
+	switch(msg) {
+		case "resync":
+			uint32_t otps[s];
+			for(int i = 0; i < s; i++) {
+			otps[i] = calcOTP(6); //TODO digits
+			}
+			break;
+		default:
+			break;
+	}
+	return backmsg;
+}
 
 uint32_t AuthHOTP::calcOTP(uint8_t digits) {
   
