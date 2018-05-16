@@ -2,9 +2,10 @@
 #include "AuthHOTP.h"
 #include "src/Cryptosuite-master/sha1.h"
 
-AuthHOTP::AuthHOTP(char* secret, size_t secretSize) {
+AuthHOTP::AuthHOTP(char* secret, size_t secretSize, uint8_t digits) {
 	_secret = secret;
 	_secretSize = secretSize;
+	_digits = digits;
 }
 
 void AuthHOTP::printHash(uint8_t* hash) {
@@ -17,55 +18,85 @@ void AuthHOTP::printHash(uint8_t* hash) {
   Serial.println();
 }
 
-char* AuthHOTP::authServer(char* msg) {
-	char* backmsg;
-	switch(msg) {
-		case "check":
-			//TODO cooldown(throttle)
-			char buffer[11];
-			itoa(otp, buffer, 10);
-			uint8_t digits = strlen(buffer);
-			if(digits > 5 && digits < 9) {
-				if(otp == calcOTP(digits)) {
-				#ifdef DEBUG
-				Serial.println("Auth: C: " + String((uint32_t)_counter) + " Success");
-				#endif
-				_counter++;
-				} else {
-					//TODO Resync
-				}
-			}
+String AuthHOTP::authServer(String msg) {
+	String cmd = msg.substring(0,msg.indexOf(' '));
+	String param1 = msg.substring(msg.indexOf(' ') + 1);
+	if(cmd == String("authRequest")) {
+		uint8_t digits = param1.length();
+		if(digits > 8 || digits < 6) {
+			return "authFailure invalidparam";
+		}
+		uint32_t otp = param1.toInt();
+		
+		//TODO: remtries per timer resetten
+		if(_remTries <= 0) {
 			#ifdef DEBUG
-			Serial.println("Auth: C: " + String((uint32_t)_counter) + " Failure");
+			Serial.println("Server: Auth: C: " + String((uint32_t)_counter) + " Failure: No more retries available");
 			#endif
-			break;
-		default:
-			break;
-	}
-	return backmsg;
-}
-
-char* AuthHOTP::authClient(char* msg) {
-	char* backmsg;
-	switch(msg) {
-		case "resync":
-			uint32_t otps[s];
-			for(int i = 0; i < s; i++) {
-			otps[i] = calcOTP(6); //TODO digits
+			return "authFailure throttling";
+		}
+		
+		if(_counter == 0) {_counter++;} //Falls erste Authentifikation auf Serverseite: counter auf 1 setzen um in Sync zu bleiben mit client
+		
+		if(_digits == digits) {
+			if(otp == calcOTP()) {
+			#ifdef DEBUG
+			Serial.println("Server: Auth: C: " + String((uint32_t)_counter) + " Success");
+			#endif
+			_counter++;
+			return "authSuccess " + String(otp);
+			} else { //Resync probieren
+				for(int i = 0; i < _resync; i++) {
+					#ifdef DEBUG
+					Serial.println("Server: Auth: C: " + String((uint32_t)_counter) + " Failure: Trying resync...");
+					#endif
+					_counter++;
+					if(calcOTP() == otp) {
+						#ifdef DEBUG
+						Serial.println("Server: Auth: C: " + String((uint32_t)_counter) + " Success after " + String(i+1) + " resync attempt(s)");
+						#endif
+						return "authSuccess " + String(otp);
+					}
+				}
+				#ifdef DEBUG
+				Serial.println("Server: Auth: C: " + String((uint32_t)_counter) + " Failure: Resync not successfull");
+				#endif
 			}
-			break;
-		default:
-			break;
+		}
+		_remTries--;
+		#ifdef DEBUG
+		Serial.println("Server: Auth: C: " + String((uint32_t)_counter) + " Failure: Remaining Tries: " + String(_remTries));
+		#endif
+		return "authFailure " + String(otp);
 	}
-	return backmsg;
 }
 
-uint32_t AuthHOTP::calcOTP(uint8_t digits) {
+//TODO ausgabe für client und server schöner machen
+String AuthHOTP::authClient(String msg) {
+	String cmd = msg.substring(0,msg.indexOf(' '));
+	String param1 = msg.substring(msg.indexOf(' ') + 1);
+	if(cmd == String("authRequest")) {
+		_counter++;
+		return "authRequest " + String(calcOTP());
+	} else if(cmd == String("authSuccess")) {
+		#ifdef DEBUG
+		Serial.println("Client: Success: " + param1);
+		#endif
+		return "";
+	} else if(cmd == String("authFailure")) {
+		#ifdef DEBUG
+		Serial.println("Client: Failure: " + param1);
+		#endif
+		return "";
+	}
+}
+
+uint32_t AuthHOTP::calcOTP() {
   
   uint64_t divider;
-  if(digits == 6) {divider = 1000000;}         //10^6
-  else if(digits == 7) {divider = 10000000;}   //10^7
-  else if(digits == 8) {divider = 100000000;}  //10^8
+  if(_digits == 6) {divider = 1000000;}         //10^6
+  else if(_digits == 7) {divider = 10000000;}   //10^7
+  else if(_digits == 8) {divider = 100000000;}  //10^8
   else {return 0;}
 
   //SHA1 HMAC Hash
@@ -76,9 +107,9 @@ uint32_t AuthHOTP::calcOTP(uint8_t digits) {
   }
   hash = Sha1.resultHmac();
   
-  #ifdef DEBUG
+  /*#ifdef DEBUG
   printHash(hash);
-  #endif
+  #endif*/
   
   uint8_t offset   =  hash[19] & 0xf;
   uint32_t otp = 0;
@@ -89,13 +120,13 @@ uint32_t AuthHOTP::calcOTP(uint8_t digits) {
   otp = otp & 0x7FFFFFFF; //Vorzeichen Byte maskieren, aufgrund unsigned vs signed modulo berechnung auf verschiedenen prozessoren.
   otp = otp % divider;
 
-  #ifdef DEBUG
+  /*#ifdef DEBUG
   Serial.print("OTP: " + String(otp) + "      C: " + String((uint32_t)_counter) + "      K: ");
   for(int i = 0; i < _secretSize; i++) {
     Serial.print((char)_secret[i]);
   }
   Serial.println();
   #endif
-  
+  */
   return otp;
 }

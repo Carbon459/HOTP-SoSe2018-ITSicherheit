@@ -46,13 +46,16 @@ void setup() {
   attachInterrupt(CC1101Interrupt, messageReceived, FALLING);
 
   
-  AuthHOTP hotp("12345678901234567890", 20);
-  hotp.auth(755224);
-  hotp.auth(755224);
+  AuthHOTP server("12345678901234567890", 20, 6);
+  AuthHOTP client("12345678901234567890", 20, 6);
+  client.authClient(server.authServer(client.authClient("authRequest")));
+  client.authClient(server.authServer(client.authClient("authRequest")));
+  client.authClient(server.authServer(client.authClient("authRequest")));
+  client.authClient(server.authServer(client.authClient("authRequest")));
 }
 
 void loop() {
-if (packetWaiting) {
+/*if (packetWaiting) {
         detachInterrupt(CC1101Interrupt);
         packetWaiting = false;
         CCPACKET packet;
@@ -93,8 +96,7 @@ if (packetWaiting) {
 
         attachInterrupt(CC1101Interrupt, messageReceived, FALLING);
     }  
-  
-  
+  */
   
 }
 
