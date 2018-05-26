@@ -117,7 +117,7 @@ uint32_t AuthHOTP::calcOTP() {
     otp = (otp << 8) | hash[offset + i];
   }
   
-  otp = otp & 0x7FFFFFFF; //Vorzeichen Byte maskieren, aufgrund unsigned vs signed modulo berechnung auf verschiedenen prozessoren.
+  otp = otp & 0x7FFFFFFF; //Vorzeichen Bit maskieren, aufgrund unsigned vs signed modulo berechnung auf verschiedenen prozessoren.
   otp = otp % divider;
 
   /*#ifdef DEBUG
