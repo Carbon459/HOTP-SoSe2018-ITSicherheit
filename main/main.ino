@@ -48,10 +48,22 @@ void setup() {
   
   AuthHOTP server("12345678901234567890", 20, 6);
   AuthHOTP client("12345678901234567890", 20, 6);
-  client.authClient(server.authServer(client.authClient("authRequest")));
-  client.authClient(server.authServer(client.authClient("authRequest")));
-  client.authClient(server.authServer(client.authClient("authRequest")));
-  client.authClient(server.authServer(client.authClient("authRequest")));
+  
+  for(int i = 29; i < 50; i++) {
+    client.setCounter(i);
+    client.calcOTP();
+  }
+  /*client.setCounter(30);
+  client.calcOTP();*/
+  
+  //Serial.println(client.calcOTP());
+  /*String s = "";
+  do {
+    s = client.authClient("authRequest");
+    s = server.authServer(s);
+    s = client.authClient(s);
+    delay(1000);
+  } while(!s.indexOf("authSuccess") >= 0);*/
 }
 
 void loop() {
@@ -97,7 +109,6 @@ void loop() {
         attachInterrupt(CC1101Interrupt, messageReceived, FALLING);
     }  
   */
-  
 }
 
 // Get signal strength indicator in dBm.
