@@ -74,7 +74,7 @@ String AuthHOTP::authClient(String msg) {
 	String param1 = msg.substring(msg.indexOf(' ') + 1);
 	if(cmd == String("authRequest")) {
 		_counter++;
-		return "authRequest " + String(calcOTP());
+		return "authRequest " + padOTP(calcOTP());
 	} else if(cmd == String("authSuccess")) {
 		#ifdef DEBUG
 		Serial.println("Client: Success: " + param1);

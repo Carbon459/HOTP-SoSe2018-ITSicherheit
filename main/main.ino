@@ -49,21 +49,20 @@ void setup() {
   AuthHOTP server("12345678901234567890", 20, 6);
   AuthHOTP client("12345678901234567890", 20, 6);
   
-  for(int i = 29; i < 50; i++) {
+  /*for(int i = 29; i < 50; i++) {
     client.setCounter(i);
     client.calcOTP();
   }
-  /*client.setCounter(30);
+  client.setCounter(30);
   client.calcOTP();*/
-  
-  //Serial.println(client.calcOTP());
-  /*String s = "";
+
+  String s = "";
   do {
     s = client.authClient("authRequest");
     s = server.authServer(s);
     s = client.authClient(s);
     delay(1000);
-  } while(!s.indexOf("authSuccess") >= 0);*/
+  } while(!s.indexOf("authSuccess") >= 0);
 }
 
 void loop() {
