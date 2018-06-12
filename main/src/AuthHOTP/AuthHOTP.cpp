@@ -12,6 +12,13 @@ void AuthHOTP::setCounter(int c) {
 	_counter = c;
 }
 		
+bool AuthHOTP::isAuthenticated() {
+	return _authSuccess;
+}
+void AuthHOTP::resetAuthSuccess() {
+	_authSuccess = false;
+}
+
 String AuthHOTP::authServer(String msg) {
 	String cmd = msg.substring(0,msg.indexOf(' '));
 	String param1 = msg.substring(msg.indexOf(' ') + 1);
@@ -41,6 +48,7 @@ String AuthHOTP::authServer(String msg) {
 			Serial.println("Server: Auth: C: " + String((uint32_t)_counter) + " Success");
 			#endif
 			_counter++;
+			_authSuccess = true;
 			return "authSuccess " + padOTP(otp);
 			} else { //Resync probieren
 				for(int i = 1; i <= _resync; i++) {
@@ -52,6 +60,7 @@ String AuthHOTP::authServer(String msg) {
 						#ifdef DEBUG
 						Serial.println("Server: Auth: C: " + String((uint32_t)_counter) + " Success after " + String(i+1) + " resync attempt(s)");
 						#endif
+						_authSuccess = true;
 						return "authSuccess " + padOTP(otp);
 					}
 				}
