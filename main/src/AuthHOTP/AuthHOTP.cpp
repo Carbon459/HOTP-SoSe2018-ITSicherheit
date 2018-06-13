@@ -88,6 +88,7 @@ String AuthHOTP::authClient(String msg) {
 		#ifdef DEBUG
 		Serial.println("Client: Success: " + param1);
 		#endif
+		_authSuccess = true;
 		return "";
 	} else if(cmd == String("authFailure")) {
 		#ifdef DEBUG
