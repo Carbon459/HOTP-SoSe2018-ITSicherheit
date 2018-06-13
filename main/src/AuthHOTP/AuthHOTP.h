@@ -40,7 +40,20 @@ class AuthHOTP
 		*	This function doesnt have a use if this is used as a client only.
 		**/
 		void resetAuthSuccess();
-		
+		/**
+		*	Sets the resynchronization parameter(the server will attempt to
+        *	verify a received authenticator across s consecutive
+        *	counter values)
+		*	Default: 2
+		**/
+		void setResyncParam(uint8_t s);
+		/**
+		*	Sets the throttling parameter(the server will refuse connections
+		*	from a user after t unsuccessful authentication attempts)
+		*	This will reset the Remaining Tries available!
+		*	Default: 3
+		**/
+		void setThrottleParam(uint8_t t);
 	private:
 		String padOTP(uint32_t otp);
 		void printHash(uint8_t* hash);

@@ -18,6 +18,12 @@ bool AuthHOTP::isAuthenticated() {
 void AuthHOTP::resetAuthSuccess() {
 	_authSuccess = false;
 }
+void AuthHOTP::setResyncParam(uint8_t s) {
+	_resync = s;
+}
+void AuthHOTP::setThrottleParam(uint8_t t) {
+	_remTries = t;
+}
 
 String AuthHOTP::authServer(String msg) {
 	String cmd = msg.substring(0,msg.indexOf(' '));
