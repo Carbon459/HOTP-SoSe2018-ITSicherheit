@@ -49,7 +49,7 @@ void setup() {
   Serial.println("-------------------------------------------");
   attachInterrupt(CC1101Interrupt, messageReceived, FALLING);
   
-  String s = "";
+  /*String s = "";
   do {
     s = client.authClient("authRequest");
     s = server.authServer(s);
