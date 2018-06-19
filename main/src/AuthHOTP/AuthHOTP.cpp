@@ -88,7 +88,6 @@ String AuthHOTP::authServer(String msg) {
 	}
 }
 
-//TODO ausgabe für client und server schöner machen
 String AuthHOTP::authClient(String msg) {
 	String cmd = msg.substring(0,msg.indexOf(' '));
 	String param1 = msg.substring(msg.indexOf(' ') + 1);
@@ -161,6 +160,7 @@ String AuthHOTP::padOTP(uint32_t otp) {
 	}
 }
 
+//Funktion aus Beispiel der SHA1 Library übernommen
 void AuthHOTP::printHash(uint8_t* hash) {
   int i;
   Serial.print("SHA1-HMAC: ");
