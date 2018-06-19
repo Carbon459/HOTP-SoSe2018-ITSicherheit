@@ -1,3 +1,8 @@
+/*
+ * Version 1.0
+ * Author: Friedrich Hudinjan
+ */
+
 #ifndef AuthHOTP_h
 #define AuthHOTP_h
 

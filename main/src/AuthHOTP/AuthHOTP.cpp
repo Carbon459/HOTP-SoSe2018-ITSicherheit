@@ -1,3 +1,8 @@
+/*
+ * Version 1.0
+ * Author: Friedrich Hudinjan
+ */
+
 #include "Arduino.h"
 #include "AuthHOTP.h"
 #include "src/Cryptosuite-master/sha1.h"
