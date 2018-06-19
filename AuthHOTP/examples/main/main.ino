@@ -3,7 +3,7 @@
  * Author: Friedrich Hudinjan
  */
 
-#include "src/AuthHOTP/AuthHOTP.h"
+#include <AuthHOTP.h>
 #include "src/arduino-cc1101-master/cc1101.h"
 #include "src/arduino-cc1101-master/ccpacket.h"
 
