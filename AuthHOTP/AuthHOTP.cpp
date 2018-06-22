@@ -43,7 +43,6 @@ String AuthHOTP::authServer(String msg) {
 		}
 		uint32_t otp = param1.toInt();
 		
-		//TODO: remtries per timer resetten
 		if(_remTries <= 0) {
 			#ifdef DEBUG
 			Serial.println("Server: Auth: C: " + String((uint32_t)_counter) + " Failure: No more retries available");
@@ -62,6 +61,7 @@ String AuthHOTP::authServer(String msg) {
 			_authSuccess = true;
 			return "authSuccess " + padOTP(otp);
 			} else { //Resync probieren
+				uint64_t counterSave = _counter; //Counter wert sichern falls resync nicht erfolgreich
 				for(int i = 1; i <= _resync; i++) {
 					#ifdef DEBUG
 					Serial.println("Server: Auth: C: " + String((uint32_t)_counter) + " Failure: Trying resync...");
@@ -78,6 +78,7 @@ String AuthHOTP::authServer(String msg) {
 				#ifdef DEBUG
 				Serial.println("Server: Auth: C: " + String((uint32_t)_counter) + " Failure: Resync not successfull");
 				#endif
+				_counter = counterSave; //Counterwert wiederherstellen
 			}
 		}
 		_remTries--;
