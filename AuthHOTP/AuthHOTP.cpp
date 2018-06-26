@@ -69,9 +69,10 @@ String AuthHOTP::authServer(String msg) {
 					_counter++;
 					if(calcOTP() == otp) {
 						#ifdef DEBUG
-						Serial.println("Server: Auth: C: " + String((uint32_t)_counter) + " Success after " + String(i+1) + " resync attempt(s)");
+						Serial.println("Server: Auth: C: " + String((uint32_t)_counter) + " Success after " + String(i) + " resync attempt(s)");
 						#endif
 						_authSuccess = true;
+						_counter++; //Counter nochmal erhöhen, da Client beim nächsten Authrequest ja vorher auch inkrementiert.
 						return "authSuccess " + padOTP(otp);
 					}
 				}
